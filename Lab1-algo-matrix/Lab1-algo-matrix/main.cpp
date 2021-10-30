@@ -220,6 +220,135 @@ double** multiplyStrassen(double** a, double** b, int size) {
     return collectMatrix(c11, c12, c21, c22, new_size);
 }
 
+//Kolya's part
+
+double** transposeMatrix(double** a, int n) {
+    double** a_t = new double* [n];
+    for (int i = 0; i < n; i++)
+    {
+        a_t[i] = new double[n];
+        for (int j = 0; j < n; j++)
+        {
+            a_t[i][j] = a[j][i];
+        }
+    }
+    return a_t;
+}
+
+void multiplyNumberOnMatrix(double number, double** a, int size) {
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++)
+        {
+            a[i][j] *= number;
+        }
+    }
+}
+
+void calculateB(double** e, double** b, int n) {
+    double** t = new double* [n];
+    for (int i = 0; i < n; i++)
+    {
+        t[i] = new double[n];
+        for (int j = 0; j < n; j++)
+        {
+            t[i][j] = e[i][j];
+        }
+        t[i][i]++;
+    }
+
+    double** result = multiplyStrassen(t, b, n);
+
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            b[i][j] = result[i][j];
+        }
+        delete[] t[i];
+        delete[] result[i];
+    }
+    delete[]t;
+    delete[]result;
+}
+
+void calculateE(double** a, double** b, double** e, int n) {
+    double** t = multiplyStrassen(b, a, n);
+    multiplyNumberOnMatrix(-1, t, n);
+
+    for (int i = 0; i < n; i++)
+    {
+        t[i][i]++;
+    }
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            e[i][j] = t[i][j];
+        }
+        delete[] t[i];
+    }
+    delete[]t;
+}
+
+bool E_passCriterionOfSmallness(double** e, int n) {
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            if (e[i][j] > 0.0001) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+double** reverseMatrixByNewtonsMethod(double** a, int n) {
+    double** result = transposeMatrix(a, n);
+    double t1 = DBL_MIN, t2 = DBL_MIN, t;
+    double current_sum = 0;
+    for (int i = 0; i < n; i++)
+    {
+        current_sum = 0;
+        for (int j = 0; j < n; j++)
+        {
+            current_sum += a[i][j];
+        }
+        t1 = (t1 < current_sum) ? current_sum : t1;
+    }
+    for (int i = 0; i < n; i++)
+    {
+        current_sum = 0;
+        for (int j = 0; j < n; j++)
+        {
+            current_sum += a[j][i];
+        }
+        t2 = (t2 < current_sum) ? current_sum : t2;
+    }
+    t = 1 / (t1 * t2);
+    multiplyNumberOnMatrix(t, result, n);
+
+    double** e = new double* [n];
+    for (int i = 0; i < n; i++)
+    {
+        e[i] = new double[n];
+    }
+    do {
+        calculateE(a, result, e, n);
+        calculateB(e, result, n);
+    } while (E_passCriterionOfSmallness(e, n));
+
+
+    for (int i = 0; i < n; i++)
+    {
+        delete[] e[i];
+    }
+    delete[] e;
+
+    return result;
+}
+
 int main()
 {
     srand(time(nullptr));
