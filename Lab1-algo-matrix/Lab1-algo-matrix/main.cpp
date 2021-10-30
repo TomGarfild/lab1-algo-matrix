@@ -1,6 +1,26 @@
 #include <iostream>
 using namespace std;
 
+const int LIMIT_WHEN_USE_MULTIPLY = 1;
+
+void printSqrMatrix(double** matrix, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++)
+        {
+            cout << matrix[i][j] << " ";
+        }
+        cout << endl;
+    }
+    cout << endl;
+}
+
+double getRandNumber()
+{
+	return (rand() % 100 + 1) / 10.0;
+}
+
 int log2(int x) {
     int result = 1;
     while ((x >>= 1) != 0) {
@@ -81,7 +101,7 @@ double** multiply(double** a, double** b, int n)
             result[i][j] = 0;
 			for (int k = 0; k < n; k++)
 			{
-                result[i][j] += a[i][k] * b[k][i];
+                result[i][j] += a[i][k] * b[k][j];
 			}
 		}
 	}
@@ -110,10 +130,9 @@ double** sumOrSubMatrix(double** a, double** b, int size, char ar_operator)
 }
 
 double** multiplyStrassen(double** a, double** b, int size) {
-    if (size <= 64) {
+    if (size <= LIMIT_WHEN_USE_MULTIPLY) {
         return multiply(a, b, size);
     }
-
     const int new_size = size >> 1;
 
     double** a11 = new double* [new_size];
@@ -158,6 +177,7 @@ double** multiplyStrassen(double** a, double** b, int size) {
 
 int main()
 {
+    srand(time(nullptr));
     int n = 4;
     double** a = new double* [n];
     
@@ -166,26 +186,25 @@ int main()
         a[i] = new double[n];
 		for (int j = 0; j < n; j++)
 		{
-            a[i][j] = 1.1;
+            a[i][j] = getRandNumber();
 		}
 	}
+    cout << "A" << endl;
+    printSqrMatrix(a, n);
     double** b = new double* [n];
     for (int i = 0; i < n; i++)
     {
         b[i] = new double[n];
         for (int j = 0; j < n; j++)
         {
-            b[i][j] = 1.1;
+            b[i][j] = getRandNumber();
         }
     }
-    double** result = multiplyStrassen(a, b, n);
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = 0; j < n; j++)
-		{
-            cout << result[i][j] << " ";
-		}
-        cout << endl;
-	}
+    cout << "B" << endl;
+    printSqrMatrix(b, n);
+    double** result = multiply(a, b, n);
+    printSqrMatrix(result, n);
+    double** resultStrassen = multiplyStrassen(a, b, n);
+    printSqrMatrix(resultStrassen, n);
 	return 0;
 }
