@@ -3,11 +3,12 @@ using namespace std;
 
 const int LIMIT_WHEN_USE_MULTIPLY = 1;
 
-void printSqrMatrix(double** matrix, int size)
+void printMatrix(double** matrix, int r, int c = -1)
 {
-    for (int i = 0; i < size; i++)
+    if (c <= 0) c = r;
+    for (int i = 0; i < r; i++)
     {
-        for (int j = 0; j < size; j++)
+        for (int j = 0; j < c; j++)
         {
             cout << matrix[i][j] << " ";
         }
@@ -18,7 +19,8 @@ void printSqrMatrix(double** matrix, int size)
 
 double getRandNumber()
 {
-	return (rand() % 100 + 1) / 10.0;
+	//return (rand() % 100 + 1) / 10.0;
+    return (rand() % 10 + 1);
 }
 
 int log2(int x) {
@@ -29,15 +31,24 @@ int log2(int x) {
     return result;
 }
 
-double** addition2SquareMatrix(double** a, int n) {
-    double** result = new double*[n];
-	for (int i = 0; i < n; i++)
+int getNewDimension(int asize_r, int asize_c, int bsize_r, int bsize_c)
+{
+    return 1 << log2(max(max(asize_r, asize_c), max(bsize_r, bsize_c)));
+}
+
+double** addition2SquareMatrix(double** a, int size, int size_r, int size_c) {
+    double** result = new double*[size];
+	for (int i = 0; i < size; i++)
 	{
-        result[i] = new double[n];
+        result[i] = new double[size];
+		for (int j = 0; j < size; j++)
+		{
+            result[i][j] = 0;
+		}
 	}
 
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
+    for (int i = 0; i < size_r; i++) {
+        for (int j = 0; j < size_c; j++) {
             result[i][j] = a[i][j];
         }
     }
@@ -178,33 +189,37 @@ double** multiplyStrassen(double** a, double** b, int size) {
 int main()
 {
     srand(time(nullptr));
-    int n = 4;
-    double** a = new double* [n];
-    
-	for (int i = 0; i < n; i++)
+    int a_r = 2, a_c = 3, b_r = a_c, b_c = 4;
+    int n = getNewDimension(a_r, a_c, b_r, b_c);
+    double** a_input = new double* [a_r];
+   
+	for (int i = 0; i < a_r; i++)
 	{
-        a[i] = new double[n];
-		for (int j = 0; j < n; j++)
+        a_input[i] = new double[a_c];
+		for (int j = 0; j < a_c; j++)
 		{
-            a[i][j] = getRandNumber();
+            a_input[i][j] = getRandNumber();
 		}
 	}
     cout << "A" << endl;
-    printSqrMatrix(a, n);
-    double** b = new double* [n];
-    for (int i = 0; i < n; i++)
+    printMatrix(a_input, a_r, a_c);
+    double** b_input = new double* [b_r];
+    for (int i = 0; i < b_r; i++)
     {
-        b[i] = new double[n];
-        for (int j = 0; j < n; j++)
+        b_input[i] = new double[b_c];
+        for (int j = 0; j < b_c; j++)
         {
-            b[i][j] = getRandNumber();
+            b_input[i][j] = getRandNumber();
         }
     }
     cout << "B" << endl;
-    printSqrMatrix(b, n);
+    printMatrix(b_input, b_r, b_c);
+
+    double** a = addition2SquareMatrix(a_input, n, a_r, a_c);
+    double** b = addition2SquareMatrix(b_input, n, b_r, b_c);
     double** result = multiply(a, b, n);
-    printSqrMatrix(result, n);
+    printMatrix(result, a_r, b_c);
     double** resultStrassen = multiplyStrassen(a, b, n);
-    printSqrMatrix(resultStrassen, n);
+    printMatrix(resultStrassen, a_r, b_c);
 	return 0;
 }
