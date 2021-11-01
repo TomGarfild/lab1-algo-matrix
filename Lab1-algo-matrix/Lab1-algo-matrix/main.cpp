@@ -1,3 +1,6 @@
+#include <cfloat>
+#include <cmath>
+#include <stdexcept>
 #include <chrono>
 #include <iostream>
 using namespace std;
@@ -349,6 +352,113 @@ double** reverseMatrixByNewtonsMethod(double** a, int n) {
     return result;
 }
 
+//Linear Least Squares by Paul Koba
+
+/** 
+ * Special trivial case where n == m
+ * y - array containing results of M experiments, 
+ * x - MxN matrix, where x[i][j] - value of j-th variable during i-th experiment
+ */
+double* ordinaryLeastSquares(double** x, double* y, int n) 
+{
+    double** transposedX = transposeMatrix(x, n);
+    double** product = multiplyStrassen(transposedX, x, n);
+    double** inverse = reverseMatrixByNewtonsMethod(product, n);
+    double** product2 = multiplyStrassen(inverse, transposedX, n);
+    double* result = new double[n]();
+
+    for(int i = 0; i < n; ++i) {
+        for(int j = 0; j < n; ++j) {
+            result[i] += (double)y[j] * product2[i][j];
+        }
+    }
+
+    for(int i = 0; i < n; ++i) delete[] transposedX[i];
+    for(int i = 0; i < n; ++i) delete[] product[i];
+    for(int i = 0; i < n; ++i) delete[] inverse[i];
+    for(int i = 0; i < n; ++i) delete[] product2[i];
+    delete[] transposedX;
+    delete[] product;
+    delete[] inverse;
+    delete[] product2;
+
+    return result;
+}
+
+/**
+ * y - array containing results of M experiments, 
+ * x - MxN matrix, where x[i][j] - value of j-th variable during i-th experiment
+ */
+double* ordinaryLeastSquares(double** x, double* y, int m, int n) 
+{
+    //Special cases.
+    if(n == m) return ordinaryLeastSquares(x, y, n);
+    if(m < n) throw invalid_argument("Expected no more variables than datapoints");
+
+    //General case.
+    double** tempMatrix = new double*[m]();
+    for(int i = 0; i < m; ++i) tempMatrix[i] = new double[m]();
+
+    for(int i = 0; i < m; ++i) {
+        for(int j = 0; j < n; ++j) {
+            tempMatrix[i][j] = x[i][j];
+        }
+    }
+
+    double** transposedX = transposeMatrix(tempMatrix, m);
+    double** product = multiplyStrassen(transposedX, tempMatrix, m);
+    double** inverse = reverseMatrixByNewtonsMethod(product, n);
+    double** tempProductMatrix = new double*[m]();
+
+    for(int i = 0; i < m; ++i) tempProductMatrix[i] = new double[m]();
+
+    for(int i = 0; i < n; ++i) {
+        for(int j = 0; j < n; ++j) {
+            tempProductMatrix[i][j] = inverse[i][j];
+        }
+    }
+
+    double** product2 = multiplyStrassen(tempProductMatrix, transposedX, m);
+    double* result = new double[m]();
+
+    for(int i = 0; i < m; ++i) {
+        for(int j = 0; j < m; ++j) {
+            result[i] += (double)y[j] * product2[i][j];
+        }
+    }
+
+    for(int i = 0; i < m; ++i)  delete[] tempMatrix[i];
+    for(int i = 0; i < m; ++i)  delete[] transposedX[i];
+    for(int i = 0; i < m; ++i)  delete[] product[i];
+    for(int i = 0; i < m; ++i)  delete[] product2[i];
+    for(int i = 0; i < m; ++i)  delete[] tempProductMatrix[i];
+    for(int i = 0; i < n; ++i)  delete[] inverse[i];
+    delete[] tempMatrix;
+    delete[] transposedX;
+    delete[] product;
+    delete[] product2;
+    delete[] tempProductMatrix;
+    delete[] inverse;
+
+    return result;
+}
+
+double meanSquaredError(double** x, double* y, double* coeffs, int m, int n)
+{
+    double result = 0.;
+
+    for(int i = 0; i < m; ++i) {
+        double current = 0.;
+        for(int j = 0; j < n; ++j) {
+            current += x[i][j] * coeffs[j];
+        }
+        result += pow(current - y[i], 2);
+    }
+
+    return result / n;
+}
+
+
 int main()
 {
     srand(time(nullptr));
@@ -397,8 +507,8 @@ int main()
     cout << boolalpha << twoMatrixEqual(result, resultStrassen, a_r, b_c);
     cout << " " << chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms";
 	cout << " " << chrono::duration_cast<std::chrono::milliseconds>(strassen_end - strassen_begin).count() << "ms";
-    delete a_input;
-    delete b_input;
+    delete[] a_input;
+    delete[] b_input;
     delete a;
     delete b;
     delete result;
