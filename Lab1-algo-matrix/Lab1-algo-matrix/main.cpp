@@ -5,6 +5,153 @@ using namespace std;
 const int LIMIT_WHEN_USE_MULTIPLY = 64;
 const double EPSILON = 1e-6;
 
+class matrix
+{
+public:
+    int rows, columns;
+    double** table;
+    matrix(int);
+    matrix(int, int);
+    ~matrix();
+    void print() const;
+};
+
+matrix::matrix(int size)
+{
+    rows = columns = size;
+    table = new double* [rows];
+    for (int i = 0; i < rows; i++)
+    {
+        table[i] = new double[columns] {};
+    }
+}
+
+matrix::matrix(int r, int c)
+{
+    rows = r;
+    columns = c;
+    table = new double* [rows];
+	for (int i = 0; i < rows; i++)
+	{
+        table[i] = new double[columns]{};
+	}
+}
+
+matrix::~matrix()
+{
+	for (int i = 0; i < rows; i++)
+	{
+        delete[] table[i];
+	}
+    delete[] table;
+}
+
+void matrix::print() const
+{
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < columns; j++)
+        {
+            cout << table[i][j] << " ";
+        }
+        cout << endl;
+    }
+    cout << endl;
+}
+
+matrix& operator+(const matrix& left, const matrix& right)
+{
+	const int r = left.rows;
+	const int c = left.columns;
+    matrix result(r, c);
+    for (int i = 0; i < r; i++)
+    {
+        for (int j = 0; j < c; j++)
+        {
+            result.table[i][j] = left.table[i][j] + right.table[i][j];
+        }
+    }
+    return result;
+}
+
+matrix& operator-(const matrix& left, const matrix& right)
+{
+    const int r = left.rows;
+    const int c = left.columns;
+    matrix result(r, c);
+    for (int i = 0; i < r; i++)
+    {
+        for (int j = 0; j < c; j++)
+        {
+            result.table[i][j] = left.table[i][j] - right.table[i][j];
+        }
+    }
+    return result;
+}
+
+matrix& operator*(matrix& left, matrix& right)
+{
+    const int r = left.rows;
+    const int c = right.columns;
+    matrix result(r, c);
+    for (int i = 0; i < r; i++)
+    {
+        for (int j = 0; j < c; j++)
+        {
+            for (int k = 0; k < right.rows; k++)
+            {
+                result.table[i][j] += left.table[i][k] * right.table[k][j];
+            }
+        }
+    }
+    return result;
+}
+
+void operator*=(matrix& left, matrix& right)
+{
+    const int r = left.rows;
+    const int c = right.columns;
+    matrix result(r, c);
+    for (int i = 0; i < r; i++)
+    {
+        for (int j = 0; j < c; j++)
+        {
+            for (int k = 0; k < right.rows; k++)
+            {
+                result.table[i][j] += left.table[i][k] * right.table[k][j];
+            }
+        }
+    }
+    left = result;
+}
+
+matrix operator*(matrix matrix, double number)
+{
+    for (int i = 0; i < matrix.rows; i++)
+    {
+        for (int j = 0; j < matrix.columns; j++)
+        {
+            matrix.table[i][j] *= number;
+        }
+    }
+    return matrix;
+}
+
+bool operator==(const matrix& left, const matrix& right)
+{
+    for (int i = 0; i < left.rows; i++)
+    {
+        for (int j = 0; j < left.columns; j++)
+        {
+            if (fabs(left.table[i][j] - right.table[i][j]) > EPSILON)
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 bool twoMatrixEqual(double** a, double** b, int r, int c)
 {
 	for (int i = 0; i < r; i++)
@@ -16,7 +163,7 @@ bool twoMatrixEqual(double** a, double** b, int r, int c)
                 return false;
 			}
 		}
-	}
+	}	
 
     return true;
 }
@@ -98,6 +245,33 @@ void splitMatrix(double** a, double** a11, double** a12, double** a21, double** 
     }
 }
 
+void splitMatrix(const matrix& a, matrix& a11, matrix& a12, matrix& a21, matrix& a22) {
+    const int size = a.rows;
+	const int new_size = size >> 1;
+
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++)
+        {
+            if (i < new_size && j < new_size)
+            {
+                a11.table[i][j] = a.table[i][j];
+            }
+            else if (i < new_size && j >= new_size)
+            {
+                a12.table[i][j - new_size] = a.table[i][j];
+            }
+            else if (i >= new_size && j < new_size)
+            {
+                a21.table[i - new_size][j] = a.table[i][j];
+            }
+            else
+            {
+                a22.table[i - new_size][j - new_size] = a.table[i][j];
+            }
+        }
+    }
+}
+
 double** collectMatrix(double** a11, double** a12, double** a21, double** a22, int size) {
     const int new_size = size << 1;
     double** a = new double*[new_size];
@@ -113,6 +287,22 @@ double** collectMatrix(double** a11, double** a12, double** a21, double** a22, i
             a[i][j + size] = a12[i][j];
             a[i + size][j] = a21[i][j];
             a[i + size][j + size] = a22[i][j];
+        }
+    }
+    return a;
+}
+
+matrix& collectMatrix(matrix& a11, matrix& a12, matrix& a21, matrix& a22) {
+    const int size = a11.rows;
+    const int new_size = size << 1;
+    matrix a(new_size);
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++)
+        {
+            a.table[i][j] = a11.table[i][j];
+            a.table[i][j + size] = a12.table[i][j];
+            a.table[i + size][j] = a21.table[i][j];
+            a.table[i + size][j + size] = a22.table[i][j];
         }
     }
     return a;
@@ -155,6 +345,41 @@ double** sumOrSubMatrix(double** a, double** b, int size, char ar_operator)
         }
     }
     return result;
+}
+
+matrix multiplyStrassen(matrix a, matrix b) {
+    const int size = a.rows;
+    if (size <= LIMIT_WHEN_USE_MULTIPLY) {
+        return a * b;
+    }
+    const int new_size = size >> 1;
+
+    matrix a11(new_size);
+    matrix a12(new_size);
+    matrix a21(new_size);
+    matrix a22(new_size);
+    matrix b11(new_size);
+    matrix b12(new_size);
+    matrix b21(new_size);
+    matrix b22(new_size);
+
+    splitMatrix(a, a11, a12, a21, a22);
+    splitMatrix(b, b11, b12, b21, b22);
+
+    matrix p1 = multiplyStrassen(a11 + a22, b11 + b22);
+    matrix p2 = multiplyStrassen(a21 + a22, b11);
+    matrix p3 = multiplyStrassen(a11, b12 - b22);
+    matrix p4 = multiplyStrassen(a22, b21 - b11);
+    matrix p5 = multiplyStrassen(a11 + a12, b22);
+    matrix p6 = multiplyStrassen(a21 - a11, b11 + b12);
+    matrix p7 = multiplyStrassen(a12 - a22, b21 + b22);
+
+    matrix c11 = p1 + p4 + p7 - p5;
+    matrix c12 = p3 + p5;
+    matrix c21 = p2 + p4;
+    matrix c22 = p1 - p2 + p3 + p6;
+
+    return collectMatrix(c11, c12, c21, c22);
 }
 
 double** multiplyStrassen(double** a, double** b, int size) {
@@ -351,6 +576,22 @@ double** reverseMatrixByNewtonsMethod(double** a, int n) {
 
 int main()
 {
+    matrix a2(4, 4);
+    matrix b2(4, 4);
+    for (int i = 0; i < a2.rows; i++)
+    {
+        for (int j = 0; j < a2.columns; j++)
+        {
+            a2.table[i][j] = rand()%10+1;
+            b2.table[i][j] = rand() % 10 + 1;
+        }
+    }
+	a2.print();
+    b2.print();
+
+    a2 *= b2;
+	a2.print();
+	
     srand(time(nullptr));
     int a_r = 128, a_c = 128, b_r = a_c, b_c = 128;
     int n = getNewDimension(a_r, a_c, b_r, b_c);
