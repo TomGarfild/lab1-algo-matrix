@@ -433,6 +433,63 @@ double meanSquaredError(double** x, double* y, double* coeffs, int m, int n)
     return result / n;
 }
 
+//finding reversed matrix using Gauss method by Tochoniy Volodymyr
+
+void swapRaws(double* x, double* y) {
+    double* temp = x;
+    x = y;
+    y = temp;
+}
+
+double** getReversedMatrixByGaussMethod(double** a, int n) {
+    //initialization
+    double** result = new double* [n];
+    for (int i = 0; i < n; i++) {
+        result[i] = new double[n];
+        for (int j = 0; j < n; j++) result[i][j] = 0;
+        result[i][i] = 1;
+    }
+    //forward
+    for (int i = 0; i < n; i++) {
+        int nonZeroElemIndex = i;
+        while (nonZeroElemIndex < n && a[nonZeroElemIndex][i] == 0) nonZeroElemIndex++;
+        if (nonZeroElemIndex == n) {  //determinator == 0
+            multiplyNumberOnMatrix(0, result, n);
+            return result;
+        }
+        swapRaws(a[i], a[nonZeroElemIndex]);  //looking for non zero element
+        
+        double d = a[i][i];
+        for (int j = 0; j < n; j++) a[i][j] /= d, result[i][j] /= d;
+        for (int r = i + 1; r < n; r++) {
+            double k = a[r][i];
+            for (int j = 0; j < n; j++) a[r][j] -= a[i][j] * k, result[r][j] -= result[i][j]*k;
+        }
+    }
+
+    //backward
+    for (int i = n - 1; i >= 1; i--) {
+        for (int r = i - 1; r >= 0; r--) {
+            double k = a[r][i];
+            for (int j = 0; j < n; j++) a[r][j] -= a[i][j] * k, result[r][j] -= result[i][j] * k;
+        }
+    }
+
+    return result;
+}
+
+void checkerOfGaussMethod() {
+    int n = 3;
+    double** a = new double* [n];
+    for (int i = 0; i < n; i++) {
+        a[i] = new double[n];
+        for (int j = 0; j < n; j++) a[i][j] = getRandNumber();
+    }
+    cout << "Matrix A:\n";
+    printMatrix(a, n);
+    cout << "Matrix A^-1:\n";
+    printMatrix(getReversedMatrixByGaussMethod(a, n), n);
+}
 
 int main()
 {
