@@ -486,10 +486,70 @@ void testRegression()
 	cout << "--------- testRegression() ---------\n";
 }
 
+//finding reversed matrix using Gauss-Jordan method by Tochoniy Volodymyr
+
+void swapRaws(double* &x, double* &y) {
+	double* temp = x;
+	x = y;
+	y = temp;
+}
+
+Matrix getReversedMatrixByGaussMethod(Matrix a) {
+	if (a.rows != a.columns) {
+		cout << "Matrix has to be square\n";
+		return Matrix(0);
+	}
+
+	//initialization
+	int n = a.rows;
+	Matrix result(n);
+	for (int i = 0; i < n; i++) 
+		result.table[i][i] = 1;
+
+	//forward
+	for (int i = 0; i < n; i++) {
+		int nonZeroElemIndex = i;
+		while (nonZeroElemIndex < n && a.table[nonZeroElemIndex][i] == 0) nonZeroElemIndex++;
+		if (nonZeroElemIndex == n) {  //determinator == 0
+			result.resize(0, 0);
+			cout << "determinator is zero\n";
+			return result;
+		}
+		swapRaws(a.table[i], a.table[nonZeroElemIndex]);  //looking for non zero element
+
+		double d = a.table[i][i];
+		for (int j = 0; j < n; j++) a.table[i][j] /= d, result.table[i][j] /= d;
+		for (int r = i + 1; r < n; r++) {
+			double k = a.table[r][i];
+			for (int j = 0; j < n; j++) a.table[r][j] -= a.table[i][j] * k, result.table[r][j] -= result.table[i][j] * k;
+		}
+	}
+
+	//backward
+	for (int i = n - 1; i >= 1; i--) {
+		for (int r = i - 1; r >= 0; r--) {
+			double k = a.table[r][i];
+			for (int j = 0; j < n; j++) a.table[r][j] -= a.table[i][j] * k, result.table[r][j] -= result.table[i][j] * k;
+		}
+	}
+
+	return result;
+}
+
+void checkerOfGaussMethod(int size) {
+	Matrix a = Matrix(size);
+	a.randomizer();
+	cout << "Matrix A:\n";
+	cout << a;
+	cout << "Matrix A^-1:\n";
+	cout << getReversedMatrixByGaussMethod(a);
+}
+
 int main()
 {
 	srand(time(nullptr));
 	test_strassen();
 	testRegression();
+	checkerOfGaussMethod(3);
 	return 0;
 }
