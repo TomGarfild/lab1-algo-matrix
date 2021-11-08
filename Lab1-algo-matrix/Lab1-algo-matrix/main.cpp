@@ -1,5 +1,9 @@
 #include <chrono>
 #include <iostream>
+#include <cmath>
+#include <cfloat>
+#include <limits>
+
 using namespace std;
 
 const int LIMIT_WHEN_USE_MULTIPLY = 64;
@@ -82,6 +86,10 @@ public:
 			}
 		}
 		return *this;
+	}
+	double* operator[](std::size_t i) 
+	{
+		return table[i];
 	}
 	Matrix operator+(const Matrix& other) const
 	{
@@ -356,7 +364,6 @@ Matrix reverseMatrixByNewtonsMethod(Matrix A) {
 		t2 = (t2 < current_sum) ? current_sum : t2;
 	}
 	t = 1 / (t1 * t2);
-	cout << t << endl;
 	Matrix B = A.transpose() * t;
 	Matrix E(A.rows, A.columns);
 	Matrix I = identity_matrix(A.columns);
@@ -395,12 +402,94 @@ void test_strassen()
 	}
 	cout << boolalpha << (result == resultStrassen);
 	cout << " " << chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms";
-	cout << " " << chrono::duration_cast<std::chrono::milliseconds>(strassen_end - strassen_begin).count() << "ms";
+	cout << " " << chrono::duration_cast<std::chrono::milliseconds>(strassen_end - strassen_begin).count() << "ms\n";
+}
+
+//Linear Least Squares by Paul Koba
+
+/**
+ * x - MxN matrix, where x[i][j] is value of j-th variable during i-th experiment
+ * y - Mx1 matrix, where y[i][0] is result of i-th experiment
+ *
+ * Return value: Nx1 matrix of calculated coefficients.
+ */
+Matrix ordinaryLeastSquares(const Matrix& x, const Matrix& y) 
+{
+	if(x.rows != y.rows)
+		throw invalid_argument("Invalid matrix dimensions1");
+
+	if(x.rows < x.columns)
+		throw invalid_argument("Expected more trials than variables");
+
+	Matrix transposed = x.transpose();
+	Matrix product = transposed * x;
+	Matrix inverse = reverseMatrixByNewtonsMethod(product);
+
+	return inverse * transposed * y;
+}
+
+/**
+ * x - MxN matrix, where x[i][j] is value of j-th variable during i-th experiment
+ * y - Mx1 matrix, where y[i][0] is result of i-th experiment
+ * coeffs - Nx1 matrix, where coeffs[i][0] is the i-th coefficient
+ *
+ * Return value: mean squared error
+ */
+double meanSquaredError(const Matrix& x, const Matrix& y, const Matrix& coeffs)
+{
+	if(x.rows != y.rows || x.columns != coeffs.rows)
+		throw invalid_argument("Invalid matrix dimensions");
+
+	int m = x.rows;
+	int n = x.columns;
+
+    double result = 0.;
+
+    for(int i = 0; i < m; ++i) {
+        double current = 0.;
+        for(int j = 0; j < n; ++j) {
+            current += x.table[i][j] * coeffs.table[j][0];
+        }
+        result += pow(current - y.table[i][0], 2);
+    }
+
+    return result / m;
+}
+
+void testRegression() 
+{
+	cout << "--------- testRegression() ---------\n";
+	const int trials = 100;
+
+	Matrix x(4, 3);
+	Matrix y(4, 1);
+	Matrix z(3, 1);
+
+	x.randomizer();
+	y.randomizer();
+
+	z = ordinaryLeastSquares(x, y);
+
+	cout << "Matrix X:\n"<< x << "Matrix Y:\n" << y << "\n";
+
+	cout << "Calculated coefficients: " << z << "\n";
+	cout << "Calculated mean squared error: " << meanSquaredError(x, y, z) << "\n";
+
+	double r = numeric_limits<double>::max();
+
+	for(int i = 0; i < trials; ++i) {
+		z.randomizer();
+		r = min(r, meanSquaredError(x, y, z));
+	}
+
+	cout << "Minimal mean squared error after " << trials << " trials with random coeffs: " << r << "\n";
+	cout << "--------- testRegression() ---------\n";
 }
 
 int main()
 {
 	srand(time(nullptr));
 	test_strassen();
+	testRegression();
 	return 0;
 }
