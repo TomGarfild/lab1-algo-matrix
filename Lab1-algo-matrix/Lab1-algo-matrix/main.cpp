@@ -416,6 +416,8 @@ void test_strassen()
  *
  * Return value: Nx1 matrix of calculated coefficients.
  */
+Matrix getReversedMatrixByGaussMethod(Matrix a);
+
 Matrix ordinaryLeastSquares(const Matrix& x, const Matrix& y) 
 {
 	if(x.rows != y.rows)
@@ -426,7 +428,7 @@ Matrix ordinaryLeastSquares(const Matrix& x, const Matrix& y)
 
 	Matrix transposed = x.transpose();
 	Matrix product = multiplyStrassen(transposed, x);
-	Matrix inverse = reverseMatrixByNewtonsMethod(product);
+	Matrix inverse = getReversedMatrixByGaussMethod(product);
 
 	return multiplyStrassen(inverse, transposed) * y;
 }
