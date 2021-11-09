@@ -425,10 +425,10 @@ Matrix ordinaryLeastSquares(const Matrix& x, const Matrix& y)
 		throw invalid_argument("Expected more trials than variables");
 
 	Matrix transposed = x.transpose();
-	Matrix product = transposed * x;
+	Matrix product = multiplyStrassen(transposed, x);
 	Matrix inverse = reverseMatrixByNewtonsMethod(product);
 
-	return inverse * transposed * y;
+	return multiplyStrassen(inverse, transposed) * y;
 }
 
 /**
@@ -475,7 +475,7 @@ void testRegression()
 
 	cout << "Matrix X:\n"<< x << "Matrix Y:\n" << y << "\n";
 	
-	cout << "Calculated coefficients: " << z << "\n";
+	cout << "Calculated coefficients:\n" << z << "\n";
 	cout << "Calculated mean squared error: " << meanSquaredError(x, y, z) << "\n";
 
 	double r = numeric_limits<double>::max();
