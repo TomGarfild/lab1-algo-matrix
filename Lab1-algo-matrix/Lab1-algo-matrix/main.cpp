@@ -520,7 +520,9 @@ Matrix getReversedMatrixByGaussMethod(Matrix a) {
 			cout << "determinator is zero\n";
 			return result;
 		}
-		swapRaws(a.table[i], a.table[nonZeroElemIndex]);  //looking for non zero element
+		double* temp = a.table[i];  //looking for non zero element
+		a.table[i] = a.table[nonZeroElemIndex];
+		a.table[nonZeroElemIndex] = temp;
 
 		double d = a.table[i][i];
 		for (int j = 0; j < n; j++) a.table[i][j] /= d, result.table[i][j] /= d;
@@ -549,6 +551,14 @@ void checkerOfGaussMethod(int size) {
 	cout << a;
 	cout << "Matrix A^-1:\n";
 	cout << getReversedMatrixByGaussMethod(a);
+	cout << "Matrix A*A^-1:\n";
+	Matrix b = a * getReversedMatrixByGaussMethod(a);
+	cout << b;
+	Matrix e(size);
+	for (int i = 0; i < size; i++)
+		e.table[i][i] = 1;
+	if (b == e) cout << "Inversed matrix correct\n";
+	else cout << "some calculation were wrong\n";
 	cout << "--------- end of testing gauss method ---------\n\n";
 }
 
