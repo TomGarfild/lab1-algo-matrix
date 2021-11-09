@@ -378,7 +378,9 @@ Matrix reverseMatrixByNewtonsMethod(Matrix A) {
 
 void test_strassen()
 {
-	int a_r = 1024, a_c = 1024, b_r = a_c, b_c = 1024;
+	int a_r = 512, a_c = 511, b_r = a_c, b_c = 512;
+	cout << "--------- testing strassen ---------\n";
+	
 	Matrix a(a_r, a_c);
 	a.randomizer();
 
@@ -400,9 +402,10 @@ void test_strassen()
 		cout << result << endl;
 		cout << resultStrassen << endl;
 	}
-	cout << boolalpha << (result == resultStrassen);
-	cout << " " << chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms";
-	cout << " " << chrono::duration_cast<std::chrono::milliseconds>(strassen_end - strassen_begin).count() << "ms\n";
+	cout << "Is result correct: " << boolalpha << (result == resultStrassen) << "\n";
+	cout << "Multiplication time: " << chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms\n";
+	cout << "Strassen multiplication time: " << chrono::duration_cast<std::chrono::milliseconds>(strassen_end - strassen_begin).count() << "ms\n";
+	cout << "--------- end of testing strassen ---------\n\n";
 }
 
 //Linear Least Squares by Paul Koba
@@ -458,7 +461,7 @@ double meanSquaredError(const Matrix& x, const Matrix& y, const Matrix& coeffs)
 
 void testRegression() 
 {
-	cout << "--------- testRegression() ---------\n";
+	cout << "--------- testing regression ---------\n";
 	const int trials = 100;
 
 	Matrix x(4, 3);
@@ -471,7 +474,7 @@ void testRegression()
 	z = ordinaryLeastSquares(x, y);
 
 	cout << "Matrix X:\n"<< x << "Matrix Y:\n" << y << "\n";
-
+	
 	cout << "Calculated coefficients: " << z << "\n";
 	cout << "Calculated mean squared error: " << meanSquaredError(x, y, z) << "\n";
 
@@ -483,7 +486,7 @@ void testRegression()
 	}
 
 	cout << "Minimal mean squared error after " << trials << " trials with random coeffs: " << r << "\n";
-	cout << "--------- testRegression() ---------\n";
+	cout << "--------- end of testing regression ---------\n\n";
 }
 
 //finding reversed matrix using Gauss-Jordan method by Tochoniy Volodymyr
@@ -511,7 +514,7 @@ Matrix getReversedMatrixByGaussMethod(Matrix a) {
 		int nonZeroElemIndex = i;
 		while (nonZeroElemIndex < n && a.table[nonZeroElemIndex][i] == 0) nonZeroElemIndex++;
 		if (nonZeroElemIndex == n) {  //determinator == 0
-			result.resize(0, 0);
+			result = result.resize(0, 0);
 			cout << "determinator is zero\n";
 			return result;
 		}
@@ -537,12 +540,14 @@ Matrix getReversedMatrixByGaussMethod(Matrix a) {
 }
 
 void checkerOfGaussMethod(int size) {
+	cout << "--------- testing gauss method ---------\n";
 	Matrix a = Matrix(size);
 	a.randomizer();
 	cout << "Matrix A:\n";
 	cout << a;
 	cout << "Matrix A^-1:\n";
 	cout << getReversedMatrixByGaussMethod(a);
+	cout << "--------- end of testing gauss method ---------\n\n";
 }
 
 int main()
